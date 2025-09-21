@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { AppBar, Box, Stack, Typography, Badge, Switch } from "@mui/material";
+import { Box, AppBar, Switch, Stack, Typography, Badge } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import Brightness6Icon from "@mui/icons-material/Brightness6";
 import MailIcon from "@mui/icons-material/Mail";
-import { collection, onSnapshot } from "firebase/firestore";
-import { db } from "../lib/firebase"; // Pfad anpassen
+import Link from "next/link";
+import { onSnapshot, collection } from "firebase/firestore";
+import { db } from "../lib/firebase";
 
 const StyledStack = styled(Stack)(({ theme }) => ({
   display: "flex",
@@ -17,49 +18,41 @@ const StyledStack = styled(Stack)(({ theme }) => ({
 }));
 
 export default function Topbar({ user, mode, setMode }) {
-  const [checked, setChecked] = useState(mode === "dark");
+  const [checked, setChecked] = useState(false);
   const [batchCounter, setBatchCounter] = useState(0);
 
   useEffect(() => {
     if (!user?.email) return;
 
-    const colRef = collection(db, `Invitations_${user.email}`);
+    const colRef = collection(db, "Invitations " + user.email);
     const unsubscribe = onSnapshot(colRef, (snapshot) => {
-      let counter = 0;
+      let newCount = 0;
       snapshot.docs.forEach((doc) => {
-        const data = doc.data();
-        if (data.watched === undefined) {
-          counter++;
-        }
+        if (doc.data().watched === undefined) newCount++;
       });
-      setBatchCounter(counter);
+      setBatchCounter(newCount);
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user?.email]);
 
-  function handleChange() {
-    if (mode === "dark") {
-      setMode("light");
-    } else {
-      setMode("dark");
-    }
+  const handleChange = () => {
+    setMode(mode === "dark" ? "light" : "dark");
     setChecked(!checked);
-  }
+  };
 
   return (
     <Box>
       <AppBar
         position="static"
         sx={{
+          backgroundColor: "red", // statt makeStyles
           height: "120px",
-          background: "secondary",
           width: "100vw",
-          fontSize: "1.2rem",
-          justifyContent: "center",
         }}
       >
         <StyledStack>
+          {/* Titel */}
           <Typography
             sx={{
               width: { xs: 150, md: 600 },
@@ -70,22 +63,22 @@ export default function Topbar({ user, mode, setMode }) {
             Umfragen-Creator App
           </Typography>
 
-          {user ? (
-            <Typography sx={{ fontFamily: "Raleway", fontSize: "24px" }}>
-            {user.email}
-            </Typography>
-          ) : (
-            <Typography sx={{ fontFamily: "Raleway", fontSize: "24px" }}>
-            Ausgeloggt.
-            </Typography>
-          )}
+          {/* User */}
+          <Typography sx={{ fontFamily: "Raleway", fontSize: "24px" }}>
+            {user?.uid ? user.email : "Ausgeloggt."}
+          </Typography>
 
+          {/* Icons + Switch */}
           <StyledStack spacing={2}>
-            <a href="/">
-              <Badge badgeContent={batchCounter} color="secondary">
+            <Link href="/" passHref>
+              <Badge
+                badgeContent={batchCounter}
+                color="secondary"
+                sx={{ cursor: "pointer" }}
+              >
                 <MailIcon color="action" />
               </Badge>
-            </a>
+            </Link>
             <Brightness6Icon />
             <Switch
               color="warning"
