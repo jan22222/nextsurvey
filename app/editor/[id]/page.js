@@ -100,7 +100,7 @@ export default function SurveyQuestionsPage() {
           >
             Delete
           </Button>
-          <Link href={`/survey/${id}/answers/${row.original.id}`} passHref>
+          <Link href={`/editor/${id}/answers/${row.original.id}`} passHref>
             <Button variant="outlined" size="small">
               Downwire (Answers)
             </Button>

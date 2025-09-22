@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
+import { MaterialReactTable } from 'material-react-table';
 import {
   Box,
   Button,
@@ -12,8 +13,8 @@ import {
   DialogActions,
   TextField,
 } from "@mui/material";
-import useAuthStore from "../../../../store/authStore"; // default export
-import { db } from "../../../../lib/firebase";
+import useAuthStore from "../../../../../store/authStore";
+import { db } from "../../../../../lib/firebase";
 import {
   collection,
   getDocs,
@@ -21,16 +22,33 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  getDoc
 } from "firebase/firestore";
 
 export default function AnswersPage({ params }) {
   const { id, id2 } = params; // id = surveyId, id2 = questionId
   const user = useAuthStore((state) => state.user);
 
+  const [surveyTitle, setSurveyTitle] = useState("");
   const [answers, setAnswers] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [editAnswer, setEditAnswer] = useState(null);
   const [text, setText] = useState("");
+
+  // Survey Titel laden
+  useEffect(() => {
+    if (!user?.email) return;
+    const fetchSurvey = async () => {
+      const docRef = doc(db, `Surveys_${user.email}`, id);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setSurveyTitle(docSnap.data().title || "Unbenannte Umfrage");
+      } else {
+        setSurveyTitle("Umfrage nicht gefunden");
+      }
+    };
+    fetchSurvey();
+  }, [user?.email, id]);
 
   const colRef = useMemo(() => {
     if (!user?.email) return null;
@@ -76,42 +94,32 @@ export default function AnswersPage({ params }) {
     setAnswers(answers.filter((a) => a.id !== answerId));
   };
 
+  const columns = [
+    { accessorKey: "text", header: "Antwort" },
+    {
+      accessorKey: "id",
+      header: "Aktionen",
+      Cell: ({ row }) => (
+        <Stack direction="row" spacing={1}>
+          <Button variant="outlined" size="small" onClick={() => handleOpenDialog(row.original)}>Edit</Button>
+          <Button variant="outlined" color="error" size="small" onClick={() => handleDelete(row.original.id)}>Delete</Button>
+        </Stack>
+      )
+    }
+  ];
+
   return (
     <Box p={2}>
       <Stack direction="row" justifyContent="space-between" mb={2}>
-        <Typography variant="h4">Antworten</Typography>
-        <Button variant="contained" onClick={() => handleOpenDialog()}>
-          Neue Antwort
-        </Button>
+        <Typography variant="h4">{surveyTitle}</Typography>
+        <Button variant="contained" onClick={() => handleOpenDialog()}>Neue Antwort</Button>
       </Stack>
 
-      <Stack spacing={1}>
-        {answers.map((answer) => (
-          <Stack
-            key={answer.id}
-            direction="row"
-            spacing={1}
-            alignItems="center"
-          >
-            <Typography flex={1}>{answer.text}</Typography>
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={() => handleOpenDialog(answer)}
-            >
-              Edit
-            </Button>
-            <Button
-              variant="outlined"
-              color="error"
-              size="small"
-              onClick={() => handleDelete(answer.id)}
-            >
-              Delete
-            </Button>
-          </Stack>
-        ))}
-      </Stack>
+      <MaterialReactTable
+        columns={columns}
+        data={answers}
+        enablePagination
+      />
 
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle>{editAnswer ? "Antwort bearbeiten" : "Neue Antwort"}</DialogTitle>

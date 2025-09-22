@@ -10,6 +10,7 @@ export default function RootLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
   const user = useAuthStore((state) => state.user);
+  const loading = useAuthStore((state) => state.loading);
   const initAuth = useAuthStore((state) => state.initAuth);
 
   // einmal Auth Listener starten
@@ -22,10 +23,13 @@ export default function RootLayout({ children }) {
 
   // Redirect wenn User nicht eingeloggt ist
   useEffect(() => {
-    if (!user && !publicPages.includes(pathname)) {
-      router.push("/signin");
+    if (!loading && !user) {
+      const isPublic = publicPages.some((page) => pathname.startsWith(page));
+      if (!isPublic) {
+        router.push("/signin");
+      }
     }
-  }, [user, pathname, publicPages, router]);
+  }, [user, loading, pathname, publicPages, router]);
 
   return (
     <html lang="de">
