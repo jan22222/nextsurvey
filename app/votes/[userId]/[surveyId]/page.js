@@ -25,7 +25,7 @@ import useAuthStore from '@/store/authStore';
 export default function VotePage() {
   const { surveyId } = useParams();
   const { user } = useAuthStore();
-
+  const [creatorData, setCreatorData] = useState(null); 
   const [survey, setSurvey] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [selectedAnswers, setSelectedAnswers] = useState({});
@@ -92,6 +92,7 @@ export default function VotePage() {
       console.error(err);
       alert('Fehler beim Absenden');
     }
+
   };
 
   if (loading) return <p>Lade Umfrage...</p>;

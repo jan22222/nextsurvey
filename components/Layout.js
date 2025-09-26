@@ -1,36 +1,44 @@
-
 "use client";
 
-import React from "react";
 import Topbar from "./Topbar";
-import Sidebar from "./Sidebar"; // falls du eine Sidebar hast
+import Sidebar from "./Sidebar";
 import { Box } from "@mui/material";
-import useAuthStore from "../store/authStore";
 
-export default function Layout({ children }) {
-  const user = useAuthStore((state) => state.user);
-  const loading = useAuthStore((state) => state.loading);
-
-  if (loading) {
-    return <p>Lädt...</p>; // optionaler Ladebildschirm
-  }
-
+export default function Layout({ children, darkMode, setDarkMode, user }) {
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", flexDirection: "column" }}>
-      {/* Topbar, kann User als Prop bekommen */}
-      <Topbar user={user} />
+    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      
+      {/* Topbar über gesamte Breite */}
+      <Topbar user={user} darkMode={darkMode} setDarkMode={setDarkMode} />
 
-      <Box sx={{ display: "flex", flex: 1 }}>
-        {/* Sidebar optional */}
-       <Sidebar />
+      {/* Hauptbereich: Sidebar links, Content rechts */}
+      <Box sx={{ display: "flex", flexGrow: 1 }}>
+        {/* Sidebar */}
+        <Box
+          component="aside"
+          sx={{
+            width: { xs: 60, md: 240 },
+            bgcolor: "background.paper",
+            borderRight: 1,
+            borderColor: "divider",
+          }}
+        >
+          <Sidebar darkMode={darkMode}/>
+        </Box>
 
-        {/* Hauptinhalt */}
-        <Box sx={{ flex: 1, p: 2, backgroundColor: "#f9f9f9" }}>
+        {/* Content */}
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            p: 3,
+            bgcolor: "background.default",
+            minHeight: "100%",
+          }}
+        >
           {children}
         </Box>
       </Box>
     </Box>
   );
 }
-
-

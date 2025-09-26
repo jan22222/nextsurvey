@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import useAuthStore from "../store/authStore";
-import Layout from "../components/Layout"; // dein Layout mit Topbar & Sidebar
-import "../app/globals.css"; // falls du global CSS brauchst
+import Layout from "../components/Layout";
+import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
+import "../app/globals.css";
 
 export default function RootLayout({ children }) {
   const router = useRouter();
@@ -13,30 +14,45 @@ export default function RootLayout({ children }) {
   const loading = useAuthStore((state) => state.loading);
   const initAuth = useAuthStore((state) => state.initAuth);
 
-  // einmal Auth Listener starten
+  const [darkMode, setDarkMode] = useState(false);
+
   useEffect(() => {
     initAuth();
   }, [initAuth]);
 
-  // Public Pages, die ohne Login erlaubt sind
   const publicPages = useMemo(() => ["/signin", "/signup"], []);
 
-  // Redirect wenn User nicht eingeloggt ist
   useEffect(() => {
     if (!loading && !user) {
       const isPublic = publicPages.some((page) => pathname.startsWith(page));
-      if (!isPublic) {
-        router.push("/signin");
-      }
+      if (!isPublic) router.push("/signin");
     }
   }, [user, loading, pathname, publicPages, router]);
+
+  // Theme erstellen
+  const theme = useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode: darkMode ? "dark" : "light",
+          background: {
+            default: darkMode ? "#121212" : "#f5f5f5",
+            paper: darkMode ? "#1d1d1d" : "#fff",
+          },
+        },
+      }),
+    [darkMode]
+  );
 
   return (
     <html lang="de">
       <body>
-        <Layout>
-          {children}
-        </Layout>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <Layout darkMode={darkMode} setDarkMode={setDarkMode} user={user}>
+            {children}
+          </Layout>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -1,57 +1,76 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import Link from 'next/link';
-import Container from '@mui/material/Container';
-import Typography from '@mui/material/Typography';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Button from '@mui/material/Button';
+import { useEffect, useState } from "react";
+import { collection, onSnapshot } from "firebase/firestore";
+import {
+  Box,
+  Button,
+  Container,
+  CircularProgress,
+  Typography,
+} from "@mui/material";
+import Link from "next/link";
+import { db } from "@/lib/firebase";
 
 export default function HomePage() {
   const [surveys, setSurveys] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadSurveys = async () => {
-      const snapshot = await getDocs(collection(db, 'surveys'));
-      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setSurveys(data);
-    };
-    loadSurveys();
+    const colRef = collection(db, "surveys");
+    const unsubscribe = onSnapshot(colRef, (snapshot) => {
+      const list = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setSurveys(list);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
+  if (loading) {
+    return (
+      <Container sx={{ textAlign: "center", mt: 5 }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
+
   return (
-    <Container>
+    <Container sx={{ mt: 6 }}>
       <Typography variant="h4" gutterBottom>
         Verfügbare Umfragen
       </Typography>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Titel</TableCell>
-            <TableCell>Aktionen</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {surveys.map((survey) => (
-            <TableRow key={survey.id}>
-              <TableCell>{survey.title}</TableCell>
-              <TableCell>
-                <Link href={`/votes/${survey.id}`} passHref>
-                  <Button variant="contained" color="primary">
-                    Teilnehmen
-                  </Button>
-                </Link>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+
+      <Box sx={{ mt: 4 }}>
+        {surveys.length === 0 ? (
+          <Typography variant="body1">Keine Umfragen vorhanden.</Typography>
+        ) : (
+          surveys.map((survey) => (
+            <Box
+              key={survey.id}
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 2,
+                p: 2,
+                border: "1px solid #ddd",
+                borderRadius: "8px",
+              }}
+            >
+              <Typography variant="h6">{survey.title}</Typography>
+              <Link href={`/votes/${survey.creatorId}/${survey.id}`} passHref>
+                <Button variant="contained" color="primary">
+                  Teilnehmen
+                </Button>
+              </Link>
+            </Box>
+          ))
+        )}
+      </Box>
     </Container>
   );
 }

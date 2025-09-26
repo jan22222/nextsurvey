@@ -17,13 +17,11 @@ const StyledStack = styled(Stack)(({ theme }) => ({
   padding: "10px 20px",
 }));
 
-export default function Topbar({ user, mode, setMode }) {
-  const [checked, setChecked] = useState(false);
+export default function Topbar({ user, darkMode, setDarkMode }) {
   const [batchCounter, setBatchCounter] = useState(0);
 
   useEffect(() => {
     if (!user?.email) return;
-
     const colRef = collection(db, "Invitations " + user.email);
     const unsubscribe = onSnapshot(colRef, (snapshot) => {
       let newCount = 0;
@@ -32,59 +30,28 @@ export default function Topbar({ user, mode, setMode }) {
       });
       setBatchCounter(newCount);
     });
-
     return () => unsubscribe();
   }, [user?.email]);
 
-  const handleChange = () => {
-    setMode(mode === "dark" ? "light" : "dark");
-    setChecked(!checked);
-  };
-
   return (
     <Box>
-      <AppBar
-        position="static"
-        sx={{
-          backgroundColor: "red", // statt makeStyles
-          height: "120px",
-          width: "100vw",
-        }}
-      >
+      <AppBar position="static" sx={{ backgroundColor: "red", height: "120px", width: "100vw" }}>
         <StyledStack>
-          {/* Titel */}
-          <Typography
-            sx={{
-              width: { xs: 150, md: 600 },
-              fontFamily: "Raleway",
-              fontSize: { xs: "24px", md: "52px" },
-            }}
-          >
+          <Typography sx={{ width: { xs: 150, md: 600 }, fontFamily: "Raleway", fontSize: { xs: "24px", md: "52px" } }}>
             Umfragen-Creator App
           </Typography>
 
-          {/* User */}
           <Typography sx={{ fontFamily: "Raleway", fontSize: "24px" }}>
             {user?.uid ? user.email : "Ausgeloggt."}
           </Typography>
 
-          {/* Icons + Switch */}
           <StyledStack spacing={2}>
-            <Link href="/" passHref>
-              <Badge
-                badgeContent={batchCounter}
-                color="secondary"
-                sx={{ cursor: "pointer" }}
-              >
-                <MailIcon color="action" />
-              </Badge>
-            </Link>
             <Brightness6Icon />
             <Switch
               color="warning"
-              checked={checked}
-              onChange={handleChange}
-              inputProps={{ "aria-label": "controlled" }}
+              checked={darkMode}
+              onChange={() => setDarkMode(!darkMode)}
+              inputProps={{ "aria-label": "Dark Mode Toggle" }}
             />
           </StyledStack>
         </StyledStack>
