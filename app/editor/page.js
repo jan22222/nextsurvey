@@ -1,58 +1,58 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, addDoc, setDoc, doc, deleteDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
-import Container from '@mui/material/Container';
-import CircularProgress from '@mui/material/CircularProgress';
-import SC from '@/components/SurveysComponent';
 import { db } from '@/lib/firebase';
+import {
+  collection,
+  addDoc,
+  doc,
+  deleteDoc,
+  setDoc,
+  onSnapshot,
+  serverTimestamp
+} from 'firebase/firestore';
 import useAuthStore from '@/store/authStore';
+import SC from '@/components/SurveysComponent';
 
-export default function Editor() {
-  const { user, loading, initAuth } = useAuthStore();
+export default function EditorPage() {
+  const { user } = useAuthStore();
   const [surveys, setSurveys] = useState([]);
-  const [loadingSurveys, setLoadingSurveys] = useState(true);
-
-  useEffect(() => {
-    initAuth();
-  }, [initAuth]);
-
-  useEffect(() => {
-    if (!user) return;
-    const colRef = collection(db, 'surveys');
-    const unsubscribe = onSnapshot(colRef, (snapshot) => {
-      const data = snapshot.docs
-        .map((doc) => ({ id: doc.id, ...doc.data() }))
-        .filter((survey) => survey.ownerId === user.uid); // nur eigene anzeigen
-      setSurveys(data);
-      setLoadingSurveys(false);
-    });
-    return () => unsubscribe();
-  }, [user]);
+  const [loading, setLoading] = useState(true);
 
   const createSurvey = async (values) => {
-    if (!user) return;
     const ref = collection(db, 'surveys');
-    await addDoc(ref, {
+    const docRef = await addDoc(ref, {
       title: values.title,
       ownerId: user.uid,
       createdAt: serverTimestamp(),
     });
+    return docRef.id;
   };
 
-  const deleteSurvey = async (id) => {
-    await deleteDoc(doc(db, 'surveys', id));
+  const deleteSurvey = async (surveyId) => {
+    await deleteDoc(doc(db, 'surveys', surveyId));
   };
 
-  const updateSurvey = async (updatedSurvey) => {
-    const docRef = doc(db, 'surveys', updatedSurvey.id);
-    await setDoc(docRef, updatedSurvey, { merge: true });
+  const updateSurvey = async (survey) => {
+    const docRef = doc(db, 'surveys', survey.id);
+    await setDoc(docRef, { title: survey.title }, { merge: true });
   };
 
-  if (loading || loadingSurveys) return <CircularProgress />;
+  useEffect(() => {
+    if (!user) return;
+    const qRef = collection(db, 'surveys');
+    const unsub = onSnapshot(qRef, (snapshot) => {
+      const data = snapshot.docs
+        .filter(doc => doc.data().ownerId === user.uid)
+        .map(doc => ({ id: doc.id, ...doc.data() }));
+      setSurveys(data);
+      setLoading(false);
+    });
+    return () => unsub();
+  }, [user]);
 
   return (
-    <Container>
+    <>
       <SC
         user={user}
         data={surveys}
@@ -60,6 +60,6 @@ export default function Editor() {
         deleteSurvey={deleteSurvey}
         updateSurvey={updateSurvey}
       />
-    </Container>
+    </>
   );
 }

@@ -106,7 +106,7 @@ const SurveyTable = ({ data, user, deleteSurvey, updateSurvey, createSurvey }) =
               </IconButton>
             </Tooltip>
             <Tooltip title="Fragen ansehen">
-              <IconButton onClick={() => router.push(`/editor/${tableData[row.index].id}`)}>
+              <IconButton onClick={() => router.push(`/editor/${tableData[row.index].id}/questions`)}>
                 <ArrowForwardIosIcon />
               </IconButton>
             </Tooltip>
