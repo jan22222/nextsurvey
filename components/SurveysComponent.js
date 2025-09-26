@@ -113,7 +113,7 @@ const SurveyTable = ({ data, user, deleteSurvey, updateSurvey, createSurvey }) =
             <Tooltip title="Abstimmung">
               <Button
                 size="small"
-                onClick={() => router.push(`/vote/${user.uid}/${tableData[row.index].id}`)}
+                onClick={() => router.push(`/votes/${user.uid}/${tableData[row.index].id}`)}
               >
                 Abstimmung
               </Button>

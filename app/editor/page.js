@@ -2,64 +2,60 @@
 
 import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
-import {
-  collection,
-  addDoc,
-  doc,
-  deleteDoc,
-  setDoc,
-  onSnapshot,
-  serverTimestamp
-} from 'firebase/firestore';
-import useAuthStore from '@/store/authStore';
 import SC from '@/components/SurveysComponent';
+import { collection, addDoc, deleteDoc, doc, onSnapshot, setDoc } from 'firebase/firestore';
+import useAuthStore from '@/store/authStore';
 
-export default function EditorPage() {
+export default function Editor() {
   const { user } = useAuthStore();
+  const [currentSurvey, setCurrentSurvey] = useState({ id: null, title: '' });
   const [surveys, setSurveys] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const createSurvey = async (values) => {
-    const ref = collection(db, 'surveys');
-    const docRef = await addDoc(ref, {
-      title: values.title,
-      ownerId: user.uid,
-      createdAt: serverTimestamp(),
-    });
-    return docRef.id;
-  };
-
-  const deleteSurvey = async (surveyId) => {
-    await deleteDoc(doc(db, 'surveys', surveyId));
-  };
-
-  const updateSurvey = async (survey) => {
-    const docRef = doc(db, 'surveys', survey.id);
-    await setDoc(docRef, { title: survey.title }, { merge: true });
-  };
-
   useEffect(() => {
     if (!user) return;
-    const qRef = collection(db, 'surveys');
-    const unsub = onSnapshot(qRef, (snapshot) => {
-      const data = snapshot.docs
-        .filter(doc => doc.data().ownerId === user.uid)
-        .map(doc => ({ id: doc.id, ...doc.data() }));
+
+    const colRef = collection(db, 'surveys');
+    const unsubscribe = onSnapshot(colRef, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setSurveys(data);
       setLoading(false);
     });
-    return () => unsub();
+
+    return unsubscribe;
   }, [user]);
 
+  const createSurvey = async (values) => {
+    if (!user) return;
+
+    const colRef = collection(db, 'surveys');
+    await addDoc(colRef, {
+      title: values.title,
+      creator: user.email || user.uid, // Creator wird gespeichert
+      createdAt: new Date(),
+    });
+    console.log('Survey erstellt');
+  };
+
+  const deleteSurvey = async (id) => {
+    await deleteDoc(doc(db, 'surveys', id));
+  };
+
+  const updateSurvey = async (updatedSurvey) => {
+    const docRef = doc(db, 'surveys', updatedSurvey.id);
+    await setDoc(docRef, updatedSurvey, { merge: true });
+  };
+
+  if (!user) return <p>Bitte einloggen, um Umfragen zu erstellen.</p>;
+  if (loading) return <p>Lade Umfragen...</p>;
+
   return (
-    <>
-      <SC
-        user={user}
-        data={surveys}
-        createSurvey={createSurvey}
-        deleteSurvey={deleteSurvey}
-        updateSurvey={updateSurvey}
-      />
-    </>
+    <SC
+      user={user}
+      data={surveys}
+      createSurvey={createSurvey}
+      deleteSurvey={deleteSurvey}
+      updateSurvey={updateSurvey}
+    />
   );
 }
