@@ -28,19 +28,26 @@ export default function NavList({ darkMode }) {
   return (
     <List>
       {menuItems.map((item) => (
-              <Paper
-        sx={{
-          borderRadius: 0,
-        }}
-      >
-          <ListItem key={item.text} disablePadding >
-            <ListItemButton onClick={() => router.push(item.path)} sx={{ width: "300px", boxSizing: "border-box" }}>
+        <Paper
+          key={item.text} // <-- Key hier
+          sx={{
+            borderRadius: 0,
+          }}
+        >
+          <ListItem disablePadding>
+            <ListItemButton
+              onClick={() => router.push(item.path)}
+              sx={{ width: "300px", boxSizing: "border-box" }}
+            >
               <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} sx={{
-    whiteSpace: "nowrap",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-  }}/>
+              <ListItemText
+                primary={item.text}
+                sx={{
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              />
             </ListItemButton>
           </ListItem>
         </Paper>

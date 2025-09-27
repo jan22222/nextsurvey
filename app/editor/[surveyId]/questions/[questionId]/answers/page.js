@@ -33,14 +33,25 @@ export default function AnswerEditorPage() {
     'answers'
   );
 
-  useEffect(() => {
-    const unsub = onSnapshot(answersRef, (snapshot) => {
-      const as = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setAnswers(as);
-      setLoading(false);
-    });
-    return () => unsub();
-  }, [surveyId, questionId]);
+useEffect(() => {
+  const answersRef = collection(
+    db,
+    'surveys',
+    surveyId,
+    'questions',
+    questionId,
+    'answers'
+  );
+
+  const unsub = onSnapshot(answersRef, (snapshot) => {
+    const as = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    setAnswers(as);
+    setLoading(false);
+  });
+
+  return () => unsub();
+}, [surveyId, questionId]); // nur IDs als deps
+
 
   const addAnswer = async () => {
     if (!newAnswer.trim()) return;

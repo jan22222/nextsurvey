@@ -67,11 +67,6 @@ export default function Topbar({ user, darkMode, setDarkMode }) {
 
           {/* Dark Mode + Badge */}
           <StyledStack spacing={2}>
-            <Link href="/" passHref>
-              <Badge badgeContent={batchCounter} color="secondary" sx={{ cursor: "pointer" }}>
-                <MailIcon color="action" />
-              </Badge>
-            </Link>
             <Brightness6Icon />
             <Switch
               color="warning"

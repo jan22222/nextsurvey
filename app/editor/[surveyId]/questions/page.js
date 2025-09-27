@@ -21,14 +21,15 @@ export default function QuestionsEditor() {
 
   const questionsRef = collection(db, 'surveys', surveyId, 'questions');
 
-  useEffect(() => {
-    const unsub = onSnapshot(questionsRef, (snapshot) => {
-      const qs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setQuestions(qs);
-      setLoading(false);
-    });
-    return () => unsub();
-  }, [surveyId]);
+useEffect(() => {
+  const unsub = onSnapshot(questionsRef, (snapshot) => {
+    const qs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    setQuestions(qs);
+    setLoading(false);
+  });
+  return () => unsub();
+}, [surveyId, questionsRef]);
+
 
   const addQuestion = async () => {
     if (!newQuestionText) return;
