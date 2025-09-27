@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Box, AppBar, Switch, Stack, Typography, Badge } from "@mui/material";
+import { Box, AppBar, Switch, Stack, Typography, Badge, Button } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import Brightness6Icon from "@mui/icons-material/Brightness6";
 import MailIcon from "@mui/icons-material/Mail";
 import Link from "next/link";
 import { onSnapshot, collection } from "firebase/firestore";
 import { db } from "../lib/firebase";
+import useAuthStore from "@/store/authStore";
 
 const StyledStack = styled(Stack)(({ theme }) => ({
   display: "flex",
@@ -19,6 +20,7 @@ const StyledStack = styled(Stack)(({ theme }) => ({
 
 export default function Topbar({ user, darkMode, setDarkMode }) {
   const [batchCounter, setBatchCounter] = useState(0);
+  const { logout } = useAuthStore();
 
   useEffect(() => {
     if (!user?.email) return;
@@ -33,19 +35,43 @@ export default function Topbar({ user, darkMode, setDarkMode }) {
     return () => unsubscribe();
   }, [user?.email]);
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      window.location.href = "/signin";
+    } catch (err) {
+      console.error("Logout fehlgeschlagen:", err);
+    }
+  };
+
   return (
     <Box>
       <AppBar position="static" sx={{ backgroundColor: "red", height: "120px", width: "100vw" }}>
         <StyledStack>
+          {/* Titel */}
           <Typography sx={{ width: { xs: 150, md: 600 }, fontFamily: "Raleway", fontSize: { xs: "24px", md: "52px" } }}>
             Umfragen-Creator App
           </Typography>
 
-          <Typography sx={{ fontFamily: "Raleway", fontSize: "24px" }}>
-            {user?.uid ? user.email : "Ausgeloggt."}
-          </Typography>
+          {/* User Email + Logout */}
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Typography sx={{ fontFamily: "Raleway", fontSize: "24px" }}>
+              {user?.uid ? user.email : "Ausgeloggt."}
+            </Typography>
+            {user?.uid && (
+              <Button variant="outlined" color="inherit" size="small" onClick={handleLogout}>
+                Logout
+              </Button>
+            )}
+          </Stack>
 
+          {/* Dark Mode + Badge */}
           <StyledStack spacing={2}>
+            <Link href="/" passHref>
+              <Badge badgeContent={batchCounter} color="secondary" sx={{ cursor: "pointer" }}>
+                <MailIcon color="action" />
+              </Badge>
+            </Link>
             <Brightness6Icon />
             <Switch
               color="warning"

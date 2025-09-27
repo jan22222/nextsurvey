@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, doc, onSnapshot, deleteDoc } from 'firebase/firestore';
 import Container from '@mui/material/Container';
@@ -12,6 +12,7 @@ import Stack from '@mui/material/Stack';
 
 export default function QuestionsEditor() {
   const params = useParams();
+  const router = useRouter();
   const surveyId = params.surveyId;
 
   const [questions, setQuestions] = useState([]);
@@ -44,7 +45,14 @@ export default function QuestionsEditor() {
 
   return (
     <Container>
-      <Typography variant="h4" gutterBottom>Fragen</Typography>
+      <Stack direction="row" spacing={2} mb={2}>
+        <Button variant="outlined" onClick={() => router.back()}>
+          Zurück
+        </Button>
+        <Typography variant="h4" gutterBottom>
+          Fragen
+        </Typography>
+      </Stack>
 
       <Stack spacing={2} mb={2}>
         <TextField

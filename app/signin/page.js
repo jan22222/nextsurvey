@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../lib/firebase"; // Pfad zu deinem firebase.js
+import { auth } from "../../lib/firebase";
 import useAuthStore from "../../store/authStore";
 
 import Alert from "@mui/material/Alert";
@@ -16,7 +16,7 @@ import Box from "@mui/material/Box";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { createTheme, ThemeProvider, useTheme } from "@mui/material/styles";
 
 const theme = createTheme();
 
@@ -27,13 +27,15 @@ export default function SignInPage() {
   const [password, setPassword] = useState("");
   const [errormessage, setErrormessage] = useState("");
 
+  const muiTheme = useTheme();
+  const textColor = muiTheme.palette.mode === "dark" ? "white" : "black";
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      initAuth(); // Zustand Auth aktualisieren
-      router.push("/"); // Weiterleitung nach Login
+      initAuth();
+      router.push("/");
     } catch (error) {
       setErrormessage(error.code);
     }
@@ -61,7 +63,7 @@ export default function SignInPage() {
           <Avatar sx={{ m: 1, bgcolor: "secondary.main" }}>
             <LockOutlinedIcon />
           </Avatar>
-          <Typography component="h1" variant="h5">
+          <Typography component="h1" variant="h5" sx={{ color: textColor }}>
             Anmelden
           </Typography>
           <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
@@ -75,6 +77,8 @@ export default function SignInPage() {
               autoComplete="email"
               autoFocus
               onChange={(e) => setEmail(e.target.value)}
+              InputProps={{ sx: { color: textColor } }}
+              InputLabelProps={{ sx: { color: textColor } }}
             />
             <TextField
               margin="normal"
@@ -86,6 +90,8 @@ export default function SignInPage() {
               id="password"
               autoComplete="current-password"
               onChange={(e) => setPassword(e.target.value)}
+              InputProps={{ sx: { color: textColor } }}
+              InputLabelProps={{ sx: { color: textColor } }}
             />
             <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
               Anmelden

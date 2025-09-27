@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import {
   collection,
@@ -18,6 +18,7 @@ import Stack from '@mui/material/Stack';
 
 export default function AnswerEditorPage() {
   const { surveyId, questionId } = useParams();
+  const router = useRouter();
 
   const [answers, setAnswers] = useState([]);
   const [newAnswer, setNewAnswer] = useState('');
@@ -58,9 +59,14 @@ export default function AnswerEditorPage() {
 
   return (
     <Container>
-      <Typography variant="h4" gutterBottom>
-        Antworten für Frage
-      </Typography>
+      <Stack direction="row" spacing={2} mb={2}>
+        <Button variant="outlined" onClick={() => router.back()}>
+          Zurück
+        </Button>
+        <Typography variant="h4" gutterBottom>
+          Antworten für Frage
+        </Typography>
+      </Stack>
 
       <Stack spacing={2} mb={3}>
         <TextField

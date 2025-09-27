@@ -1,102 +1,59 @@
 "use client";
 
-import React, { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../lib/firebase";
-
-import emailjs from "@emailjs/browser";
-import {
-  Avatar,
-  Button,
-  CssBaseline,
-  TextField,
-  Link,
-  Grid,
-  Box,
-  Typography,
-  Container,
-  Alert,
-} from "@mui/material";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { auth } from "../../lib/firebase";
+import useAuthStore from "../../store/authStore";
 
-const defaultTheme = createTheme();
+import Alert from "@mui/material/Alert";
+import Avatar from "@mui/material/Avatar";
+import Button from "@mui/material/Button";
+import CssBaseline from "@mui/material/CssBaseline";
+import TextField from "@mui/material/TextField";
+import Grid from "@mui/material/Grid";
+import Box from "@mui/material/Box";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import Typography from "@mui/material/Typography";
+import Container from "@mui/material/Container";
+import { createTheme, ThemeProvider, useTheme } from "@mui/material/styles";
 
-export default function Signup() {
+const theme = createTheme();
+
+export default function SignUpPage() {
   const router = useRouter();
+  const { initAuth } = useAuthStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [errormessage, setErrormessage] = useState("");
 
-  function ValidateEmail(input) {
-    const validRegex =
-      /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
-    if (input.match(validRegex)) {
-      return true;
-    } else {
-      setErrormessage("Email ungültig.");
-      return false;
-    }
-  }
+  const muiTheme = useTheme();
+  const textColor = muiTheme.palette.mode === "dark" ? "white" : "black";
 
-  function ValidatePassword(input) {
-    if (input.length > 5) {
-      return true;
-    }
-    setErrormessage("Passwort ungültig.");
-    return false;
-  }
-
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    emailjs.init("UyDRDWE8kWGKZilvk");
-
-    if (ValidateEmail(email) && ValidatePassword(password)) {
-      try {
-        const userCredential = await createUserWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
-        const user = userCredential.user;
-        console.log(user);
-
-        // Beispiel E-Mail
-        const sender = "jan.weitzel@gmail.com";
-        const serviceId = "service_hsd4xpj";
-        const templateId = "template_g72cq0o";
-        const data = {
-          sender,
-          email,
-          pw: password,
-        };
-
-        await emailjs.send(serviceId, templateId, data);
-        alert("Per Email informiert.");
-        alert("Erfolgreich registriert.");
-        router.push("/signin");
-      } catch (error) {
-        console.error(error);
-        setErrormessage(error.code || error.message);
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      if (userCredential.user) {
+        await updateProfile(userCredential.user, { displayName });
+        initAuth();
+        router.push("/");
       }
-    } else {
-      alert("Ungültige Email oder Passwort!");
+    } catch (error) {
+      setErrormessage(error.code);
     }
   };
 
   return (
-    <ThemeProvider theme={defaultTheme}>
+    <ThemeProvider theme={theme}>
       <Container component="main" maxWidth="xs">
         <CssBaseline />
-        {errormessage !== "" && (
-          <Alert severity="error">
-            {errormessage === "auth/wrong-password" && <>Passwort falsch.</>}
-            {errormessage === "auth/invalid-email" && <>Email unbekannt.</>}
-            {errormessage === "auth/email-already-in-use" && (
-              <>Email wird bereits verwendet.</>
-            )}
-            <>({errormessage})</>
+        {errormessage && (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {errormessage === "auth/email-already-in-use" && "Email wird bereits verwendet."}
+            {errormessage === "auth/invalid-email" && "Ungültige Email."}
+            {errormessage === "auth/weak-password" && "Passwort zu schwach."}
           </Alert>
         )}
         <Box
@@ -110,20 +67,33 @@ export default function Signup() {
           <Avatar sx={{ m: 1, bgcolor: "secondary.main" }}>
             <LockOutlinedIcon />
           </Avatar>
-          <Typography component="h1" variant="h5">
-            Einschreiben
+          <Typography component="h1" variant="h5" sx={{ color: textColor }}>
+            Registrieren
           </Typography>
-          <Box component="form" onSubmit={onSubmit} noValidate sx={{ mt: 1 }}>
+          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              id="displayName"
+              label="Name"
+              name="displayName"
+              autoFocus
+              onChange={(e) => setDisplayName(e.target.value)}
+              InputProps={{ sx: { color: textColor } }}
+              InputLabelProps={{ sx: { color: textColor } }}
+            />
             <TextField
               margin="normal"
               required
               fullWidth
               id="email"
-              label="Email Addresse"
+              label="Email Adresse"
               name="email"
               autoComplete="email"
-              autoFocus
               onChange={(e) => setEmail(e.target.value)}
+              InputProps={{ sx: { color: textColor } }}
+              InputLabelProps={{ sx: { color: textColor } }}
             />
             <TextField
               margin="normal"
@@ -135,20 +105,17 @@ export default function Signup() {
               id="password"
               autoComplete="current-password"
               onChange={(e) => setPassword(e.target.value)}
+              InputProps={{ sx: { color: textColor } }}
+              InputLabelProps={{ sx: { color: textColor } }}
             />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-            >
-              Start
+            <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
+              Registrieren
             </Button>
-            <Grid container>
+            <Grid container justifyContent="flex-end">
               <Grid item>
-                <Link href="/signin" variant="body2">
-                  {"Sie haben bereits einen Account? Login."}
-                </Link>
+                <Button onClick={() => router.push("/signin")}>
+                  Bereits registriert? Anmelden
+                </Button>
               </Grid>
             </Grid>
           </Box>
